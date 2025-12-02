@@ -28,7 +28,7 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
 
     if (visibleWidth === 0) return;
 
-    const rtl = isRTL();
+    const rtl = isRTL(container);
 
     switch (scrollDistance) {
       case 'screen': {
