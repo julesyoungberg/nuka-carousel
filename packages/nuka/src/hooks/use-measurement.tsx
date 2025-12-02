@@ -35,6 +35,8 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
         const pageCount = Math.round(scrollWidth / visibleWidth);
         let offsets = arraySeq(pageCount, visibleWidth);
 
+        // In RTL mode, scroll offsets must be negative (except for the first page at 0)
+        // because scrollLeft uses negative values to scroll right in RTL layouts
         if (rtl) {
           offsets = offsets.map((offset) => (offset === 0 ? 0 : -offset));
         }
@@ -61,6 +63,7 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
           scrollOffsets.findIndex((offset) => offset >= remainder) + 1;
         let finalOffsets = scrollOffsets;
 
+        // In RTL mode, negate all offsets except the first (0) to match RTL scrollLeft behavior
         if (rtl) {
           finalOffsets = scrollOffsets.map((offset) =>
             offset === 0 ? 0 : -offset,
@@ -77,8 +80,10 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
           // to the end of the container
           const pageCount = Math.ceil(remainder / scrollDistance) + 1;
           let offsets = arraySeq(pageCount, scrollDistance);
+          // Clamp offsets to not exceed the total scrollable distance
           offsets = offsets.map((offset) => Math.min(offset, remainder));
 
+          // Convert to negative offsets for RTL (first page stays at 0)
           if (rtl) {
             offsets = offsets.map((offset) => (offset === 0 ? 0 : -offset));
           }

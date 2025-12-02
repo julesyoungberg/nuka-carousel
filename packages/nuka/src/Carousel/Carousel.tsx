@@ -145,8 +145,11 @@ export const Carousel = forwardRef<SlideHandle, CarouselProps>(
         const endSlideIndex = currentPage;
         const targetScrollLeft = scrollOffset[currentPage];
 
+        // Check if this is the initial render (previousPageRef starts at -1)
         const isInitialLoad = previousPageRef.current === -1;
 
+        // On initial load with initialPage set, skip if we're not at the target page yet
+        // This prevents unnecessary scroll animations during initialization
         if (
           isInitialLoad &&
           initialPage !== undefined &&
@@ -157,11 +160,14 @@ export const Carousel = forwardRef<SlideHandle, CarouselProps>(
 
         beforeSlide && beforeSlide(currentSlideIndex, endSlideIndex);
 
+        // Only enable smooth scrolling after the initial load to avoid animation on mount
         if (!isInitialLoad) {
           containerRef.current.classList.remove('scroll-auto');
           containerRef.current.classList.add('scroll-smooth');
         }
 
+        // Use scrollTo with behavior option for better control over scroll animation
+        // Fall back to direct scrollLeft assignment if scrollTo is not supported (older browsers)
         try {
           containerRef.current.scrollTo({
             left: targetScrollLeft,
