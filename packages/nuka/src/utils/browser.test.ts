@@ -18,24 +18,17 @@ describe('browser utils', () => {
       document.documentElement.dir = originalDir;
     });
 
-    it('should return true when document direction is rtl', () => {
-      document.documentElement.dir = 'rtl';
-      expect(isRTL()).toBe(true);
-    });
-
-    it('should return false when document direction is ltr', () => {
-      document.documentElement.dir = 'ltr';
-      expect(isRTL()).toBe(false);
-    });
-
-    it('should return false when document direction is not set', () => {
-      document.documentElement.dir = '';
-      expect(isRTL()).toBe(false);
-    });
-
-    it('should return false when document direction is auto', () => {
-      document.documentElement.dir = 'auto';
-      expect(isRTL()).toBe(false);
-    });
+    it.each([
+      ['rtl', true],
+      ['ltr', false],
+      ['', false],
+      ['auto', false],
+    ])(
+      'should return %s when document direction is "%s"',
+      (dir, expected) => {
+        document.documentElement.dir = dir;
+        expect(isRTL()).toBe(expected);
+      },
+    );
   });
 });

@@ -214,6 +214,20 @@ describe('useMeasurement', () => {
   describe('RTL support', () => {
     let isRTLSpy: jest.SpyInstance;
 
+    const mockElement = {
+      current: {
+        scrollWidth: 900,
+        offsetWidth: 500,
+        querySelector: () => ({
+          children: [
+            { offsetWidth: 200 },
+            { offsetWidth: 300 },
+            { offsetWidth: 400 },
+          ],
+        }),
+      },
+    } as any;
+
     beforeEach(() => {
       isRTLSpy = jest.spyOn(browser, 'isRTL');
     });
@@ -222,124 +236,39 @@ describe('useMeasurement', () => {
       isRTLSpy.mockRestore();
     });
 
-    it('should return negative scroll offsets for screen mode in RTL', () => {
-      isRTLSpy.mockReturnValue(true);
+    it.each([
+      ['screen', 2, [0, -500]],
+      ['slide', 3, [0, -200, -500]],
+      [200, 3, [0, -200, -400]],
+    ])(
+      'should return negative scroll offsets for %s mode in RTL',
+      (scrollDistance, expectedPages, expectedOffsets) => {
+        isRTLSpy.mockReturnValue(true);
 
-      const element = {
-        current: {
-          scrollWidth: 900,
-          offsetWidth: 500,
-          querySelector: () => ({
-            children: [
-              { offsetWidth: 200 },
-              { offsetWidth: 300 },
-              { offsetWidth: 400 },
-            ],
+        const { result } = renderHook(() =>
+          useMeasurement({
+            element: mockElement,
+            scrollDistance: scrollDistance as any,
           }),
-        },
-      } as any;
+        );
 
-      const { result } = renderHook(() =>
-        useMeasurement({
-          element,
-          scrollDistance: 'screen',
-        }),
-      );
-
-      const { totalPages, scrollOffset } = result.current;
-
-      expect(totalPages).toBe(2);
-      expect(scrollOffset).toEqual([0, -500]);
-    });
-
-    it('should return negative scroll offsets for slide mode in RTL', () => {
-      isRTLSpy.mockReturnValue(true);
-
-      const element = {
-        current: {
-          scrollWidth: 900,
-          offsetWidth: 500,
-          querySelector: () => ({
-            children: [
-              { offsetWidth: 200 },
-              { offsetWidth: 300 },
-              { offsetWidth: 400 },
-            ],
-          }),
-        },
-      } as any;
-
-      const { result } = renderHook(() =>
-        useMeasurement({
-          element,
-          scrollDistance: 'slide',
-        }),
-      );
-
-      const { totalPages, scrollOffset } = result.current;
-
-      expect(totalPages).toBe(3);
-      expect(scrollOffset).toEqual([0, -200, -500]);
-    });
-
-    it('should return negative scroll offsets for numbered distance in RTL', () => {
-      isRTLSpy.mockReturnValue(true);
-
-      const element = {
-        current: {
-          scrollWidth: 900,
-          offsetWidth: 500,
-          querySelector: () => ({
-            children: [
-              { offsetWidth: 200 },
-              { offsetWidth: 300 },
-              { offsetWidth: 400 },
-            ],
-          }),
-        },
-      } as any;
-
-      const { result } = renderHook(() =>
-        useMeasurement({
-          element,
-          scrollDistance: 200,
-        }),
-      );
-
-      const { totalPages, scrollOffset } = result.current;
-
-      expect(totalPages).toBe(3);
-      expect(scrollOffset).toEqual([0, -200, -400]);
-    });
+        expect(result.current.totalPages).toBe(expectedPages);
+        expect(result.current.scrollOffset).toEqual(expectedOffsets);
+      },
+    );
 
     it('should return positive scroll offsets in LTR mode', () => {
       isRTLSpy.mockReturnValue(false);
 
-      const element = {
-        current: {
-          scrollWidth: 900,
-          offsetWidth: 500,
-          querySelector: () => ({
-            children: [
-              { offsetWidth: 200 },
-              { offsetWidth: 300 },
-              { offsetWidth: 400 },
-            ],
-          }),
-        },
-      } as any;
-
       const { result } = renderHook(() =>
         useMeasurement({
-          element,
+          element: mockElement,
           scrollDistance: 'screen',
         }),
       );
 
-      const { totalPages, scrollOffset } = result.current;
-
-      expect(totalPages).toBe(2);
-      expect(scrollOffset).toEqual([0, 500]);
+      expect(result.current.totalPages).toBe(2);
+      expect(result.current.scrollOffset).toEqual([0, 500]);
     });
   });
 });
