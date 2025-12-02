@@ -143,14 +143,36 @@ export const Carousel = forwardRef<SlideHandle, CarouselProps>(
       if (containerRef.current) {
         const currentSlideIndex = previousPageRef.current;
         const endSlideIndex = currentPage;
+        const targetScrollLeft = scrollOffset[currentPage];
+
+        const isInitialLoad = previousPageRef.current === -1;
+
+        if (
+          isInitialLoad &&
+          initialPage !== undefined &&
+          currentPage !== initialPage
+        ) {
+          return;
+        }
+
         beforeSlide && beforeSlide(currentSlideIndex, endSlideIndex);
-        containerRef.current.scrollLeft = scrollOffset[currentPage];
-        afterSlide && setTimeout(() => afterSlide(endSlideIndex), 0);
-        previousPageRef.current = currentPage;
-        if (initialPage === undefined || currentPage === initialPage) {
+
+        if (!isInitialLoad) {
           containerRef.current.classList.remove('scroll-auto');
           containerRef.current.classList.add('scroll-smooth');
         }
+
+        try {
+          containerRef.current.scrollTo({
+            left: targetScrollLeft,
+            behavior: isInitialLoad ? 'auto' : 'smooth',
+          });
+        } catch (e) {
+          containerRef.current.scrollLeft = targetScrollLeft;
+        }
+
+        afterSlide && setTimeout(() => afterSlide(endSlideIndex), 0);
+        previousPageRef.current = currentPage;
       }
     }, [currentPage, scrollOffset, beforeSlide, afterSlide, initialPage]);
 

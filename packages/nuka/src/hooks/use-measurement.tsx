@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { arraySeq, arraySum } from '../utils';
+import { isRTL } from '../utils/browser';
 import { useResizeObserver } from './use-resize-observer';
 
 type MeasurementProps = {
@@ -27,12 +28,19 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
 
     if (visibleWidth === 0) return;
 
+    const rtl = isRTL();
+
     switch (scrollDistance) {
       case 'screen': {
         const pageCount = Math.round(scrollWidth / visibleWidth);
+        let offsets = arraySeq(pageCount, visibleWidth);
+
+        if (rtl) {
+          offsets = offsets.map((offset) => -offset);
+        }
 
         setTotalPages(pageCount);
-        setScrollOffset(arraySeq(pageCount, visibleWidth));
+        setScrollOffset(offsets);
         break;
       }
       case 'slide': {
@@ -51,19 +59,28 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
         // the remainder of the full width and window width
         const pageCount =
           scrollOffsets.findIndex((offset) => offset >= remainder) + 1;
+        let finalOffsets = scrollOffsets;
+
+        if (rtl) {
+          finalOffsets = scrollOffsets.map((offset) => -offset);
+        }
 
         setTotalPages(pageCount);
-        setScrollOffset(scrollOffsets);
+        setScrollOffset(finalOffsets);
         break;
       }
       default: {
         if (typeof scrollDistance === 'number' && scrollDistance > 0) {
-          // find the number of pages required to scroll all the slides
-          // to the end of the container
           const pageCount = Math.ceil(remainder / scrollDistance) + 1;
+          let offsets = arraySeq(pageCount, scrollDistance);
+          offsets = offsets.map((offset) => Math.min(offset, remainder));
+
+          if (rtl) {
+            offsets = offsets.map((offset) => -offset);
+          }
 
           setTotalPages(pageCount);
-          setScrollOffset(arraySeq(pageCount, scrollDistance));
+          setScrollOffset(offsets);
         }
       }
     }
