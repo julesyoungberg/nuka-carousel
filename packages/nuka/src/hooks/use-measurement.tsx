@@ -36,7 +36,7 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
         let offsets = arraySeq(pageCount, visibleWidth);
 
         if (rtl) {
-          offsets = offsets.map((offset) => -offset);
+          offsets = offsets.map((offset) => (offset === 0 ? 0 : -offset));
         }
 
         setTotalPages(pageCount);
@@ -62,7 +62,9 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
         let finalOffsets = scrollOffsets;
 
         if (rtl) {
-          finalOffsets = scrollOffsets.map((offset) => -offset);
+          finalOffsets = scrollOffsets.map((offset) =>
+            offset === 0 ? 0 : -offset,
+          );
         }
 
         setTotalPages(pageCount);
@@ -71,12 +73,14 @@ export function useMeasurement({ element, scrollDistance }: MeasurementProps) {
       }
       default: {
         if (typeof scrollDistance === 'number' && scrollDistance > 0) {
+          // find the number of pages required to scroll all the slides
+          // to the end of the container
           const pageCount = Math.ceil(remainder / scrollDistance) + 1;
           let offsets = arraySeq(pageCount, scrollDistance);
           offsets = offsets.map((offset) => Math.min(offset, remainder));
 
           if (rtl) {
-            offsets = offsets.map((offset) => -offset);
+            offsets = offsets.map((offset) => (offset === 0 ? 0 : -offset));
           }
 
           setTotalPages(pageCount);

@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react';
 
 import { useMeasurement } from './use-measurement';
 import * as hooks from './use-resize-observer';
+import * as browser from '../utils/browser';
 
 const domElement = {} as any;
 jest.spyOn(hooks, 'useResizeObserver').mockImplementation(() => domElement);
@@ -208,5 +209,137 @@ describe('useMeasurement', () => {
 
     expect(totalPages).toBe(3);
     expect(scrollOffset).toEqual([0, 200, 400]);
+  });
+
+  describe('RTL support', () => {
+    let isRTLSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      isRTLSpy = jest.spyOn(browser, 'isRTL');
+    });
+
+    afterEach(() => {
+      isRTLSpy.mockRestore();
+    });
+
+    it('should return negative scroll offsets for screen mode in RTL', () => {
+      isRTLSpy.mockReturnValue(true);
+
+      const element = {
+        current: {
+          scrollWidth: 900,
+          offsetWidth: 500,
+          querySelector: () => ({
+            children: [
+              { offsetWidth: 200 },
+              { offsetWidth: 300 },
+              { offsetWidth: 400 },
+            ],
+          }),
+        },
+      } as any;
+
+      const { result } = renderHook(() =>
+        useMeasurement({
+          element,
+          scrollDistance: 'screen',
+        }),
+      );
+
+      const { totalPages, scrollOffset } = result.current;
+
+      expect(totalPages).toBe(2);
+      expect(scrollOffset).toEqual([0, -500]);
+    });
+
+    it('should return negative scroll offsets for slide mode in RTL', () => {
+      isRTLSpy.mockReturnValue(true);
+
+      const element = {
+        current: {
+          scrollWidth: 900,
+          offsetWidth: 500,
+          querySelector: () => ({
+            children: [
+              { offsetWidth: 200 },
+              { offsetWidth: 300 },
+              { offsetWidth: 400 },
+            ],
+          }),
+        },
+      } as any;
+
+      const { result } = renderHook(() =>
+        useMeasurement({
+          element,
+          scrollDistance: 'slide',
+        }),
+      );
+
+      const { totalPages, scrollOffset } = result.current;
+
+      expect(totalPages).toBe(3);
+      expect(scrollOffset).toEqual([0, -200, -500]);
+    });
+
+    it('should return negative scroll offsets for numbered distance in RTL', () => {
+      isRTLSpy.mockReturnValue(true);
+
+      const element = {
+        current: {
+          scrollWidth: 900,
+          offsetWidth: 500,
+          querySelector: () => ({
+            children: [
+              { offsetWidth: 200 },
+              { offsetWidth: 300 },
+              { offsetWidth: 400 },
+            ],
+          }),
+        },
+      } as any;
+
+      const { result } = renderHook(() =>
+        useMeasurement({
+          element,
+          scrollDistance: 200,
+        }),
+      );
+
+      const { totalPages, scrollOffset } = result.current;
+
+      expect(totalPages).toBe(3);
+      expect(scrollOffset).toEqual([0, -200, -400]);
+    });
+
+    it('should return positive scroll offsets in LTR mode', () => {
+      isRTLSpy.mockReturnValue(false);
+
+      const element = {
+        current: {
+          scrollWidth: 900,
+          offsetWidth: 500,
+          querySelector: () => ({
+            children: [
+              { offsetWidth: 200 },
+              { offsetWidth: 300 },
+              { offsetWidth: 400 },
+            ],
+          }),
+        },
+      } as any;
+
+      const { result } = renderHook(() =>
+        useMeasurement({
+          element,
+          scrollDistance: 'screen',
+        }),
+      );
+
+      const { totalPages, scrollOffset } = result.current;
+
+      expect(totalPages).toBe(2);
+      expect(scrollOffset).toEqual([0, 500]);
+    });
   });
 });
