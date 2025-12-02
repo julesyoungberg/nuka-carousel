@@ -23,12 +23,9 @@ describe('browser utils', () => {
       ['ltr', false],
       ['', false],
       ['auto', false],
-    ])(
-      'should return %s when document direction is "%s"',
-      (dir, expected) => {
-        document.documentElement.dir = dir;
-        expect(isRTL()).toBe(expected);
-      },
-    );
+    ])('should return %s when document direction is "%s"', (dir, expected) => {
+      document.documentElement.dir = dir;
+      expect(isRTL()).toBe(expected);
+    });
   });
 });
